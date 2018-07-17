@@ -1,0 +1,1 @@
+You can get updated sources from: https://www.npcglib.org/~stathis/blog/precompiled-openssl/
