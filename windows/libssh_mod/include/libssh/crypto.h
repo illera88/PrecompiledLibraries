@@ -25,6 +25,7 @@
 #ifndef _CRYPTO_H_
 #define _CRYPTO_H_
 
+#include <stdbool.h>
 #include "config.h"
 
 #ifdef HAVE_LIBGCRYPT
@@ -58,6 +59,12 @@ enum ssh_key_exchange_e {
   SSH_KEX_DH_GROUP1_SHA1=1,
   /* diffie-hellman-group14-sha1 */
   SSH_KEX_DH_GROUP14_SHA1,
+#ifdef WITH_GEX
+  /* diffie-hellman-group-exchange-sha1 */
+  SSH_KEX_DH_GEX_SHA1,
+  /* diffie-hellman-group-exchange-sha256 */
+  SSH_KEX_DH_GEX_SHA256,
+#endif /* WITH_GEX */
   /* ecdh-sha2-nistp256 */
   SSH_KEX_ECDH_SHA2_NISTP256,
   /* ecdh-sha2-nistp384 */
@@ -76,7 +83,9 @@ enum ssh_key_exchange_e {
 
 enum ssh_cipher_e {
     SSH_NO_CIPHER=0,
+#ifdef WITH_BLOWFISH_CIPHER
     SSH_BLOWFISH_CBC,
+#endif /* WITH_BLOWFISH_CIPHER */
     SSH_3DES_CBC,
     SSH_AES128_CBC,
     SSH_AES192_CBC,
@@ -91,6 +100,11 @@ enum ssh_cipher_e {
 
 struct ssh_crypto_struct {
     bignum e,f,x,k,y;
+    bignum g, p;
+    int dh_group_is_mutable; /* do free group parameters */
+#ifdef WITH_GEX
+    size_t dh_pmin; int dh_pn; int dh_pmax; /* preferred group parameters */
+#endif /* WITH_GEX */
 #ifdef HAVE_ECDH
 #ifdef HAVE_OPENSSL_ECC
     EC_KEY *ecdh_privkey;
@@ -120,6 +134,7 @@ struct ssh_crypto_struct {
     unsigned char hmacbuf[DIGEST_MAX_LEN];
     struct ssh_cipher_struct *in_cipher, *out_cipher; /* the cipher structures/objects */
     enum ssh_hmac_e in_hmac, out_hmac; /* the MAC algorithms used */
+    bool in_hmac_etm, out_hmac_etm; /* Whether EtM mode is used or not */
 
     ssh_key server_pubkey;
     int do_compress_out; /* idem */
@@ -134,6 +149,7 @@ struct ssh_crypto_struct {
     char *kex_methods[SSH_KEX_METHODS];
     enum ssh_key_exchange_e kex_type;
     enum ssh_mac_e mac_type; /* Mac operations to use for key gen */
+    enum ssh_crypto_direction_e used; /* Is this crypto still used for either of directions? */
 };
 
 struct ssh_cipher_struct {
@@ -162,6 +178,11 @@ struct ssh_cipher_struct {
     struct chacha20_poly1305_keysched *chacha20_schedule;
     unsigned int keysize; /* bytes of key used. != keylen */
     size_t tag_size; /* overhead required for tag */
+    /* Counters for rekeying initialization */
+    uint32_t packets;
+    uint64_t blocks;
+    /* Rekeying limit for the cipher or manually enforced */
+    uint64_t max_blocks;
     /* sets the new key for immediate use */
     int (*set_encrypt_key)(struct ssh_cipher_struct *cipher, void *key, void *IV);
     int (*set_decrypt_key)(struct ssh_cipher_struct *cipher, void *key, void *IV);

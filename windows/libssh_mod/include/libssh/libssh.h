@@ -25,17 +25,17 @@
   #ifdef LIBSSH_STATIC
     #define LIBSSH_API
   #else
-    #ifdef libssh_exports
-      #ifdef __gnuc__
-        #define libssh_api __attribute__((dllexport))
+    #ifdef LIBSSH_EXPORTS
+      #ifdef __GNUC__
+        #define LIBSSH_API __attribute__((dllexport))
       #else
-        #define libssh_api __declspec(dllexport)
+        #define LIBSSH_API __declspec(dllexport)
       #endif
     #else
-      #ifdef __gnuc__
-        #define libssh_api __attribute__((dllimport))
+      #ifdef __GNUC__
+        #define LIBSSH_API __attribute__((dllimport))
       #else
-        #define libssh_api __declspec(dllimport)
+        #define LIBSSH_API __declspec(dllimport)
       #endif
     #endif
   #endif
@@ -406,6 +406,8 @@ enum ssh_options_e {
   SSH_OPTIONS_NODELAY,
   SSH_OPTIONS_PUBLICKEY_ACCEPTED_TYPES,
   SSH_OPTIONS_PROCESS_CONFIG,
+  SSH_OPTIONS_REKEY_DATA,
+  SSH_OPTIONS_REKEY_TIME,
 };
 
 enum {
@@ -547,6 +549,7 @@ SSH_DEPRECATED LIBSSH_API int ssh_get_publickey(ssh_session session, ssh_key *ke
 SSH_DEPRECATED LIBSSH_API int ssh_write_knownhost(ssh_session session);
 SSH_DEPRECATED LIBSSH_API char *ssh_dump_knownhost(ssh_session session);
 SSH_DEPRECATED LIBSSH_API int ssh_is_server_known(ssh_session session);
+SSH_DEPRECATED LIBSSH_API void ssh_print_hexa(const char *descr, const unsigned char *what, size_t len);
 
 
 
@@ -699,7 +702,6 @@ LIBSSH_API char *ssh_get_fingerprint_hash(enum ssh_publickey_hash_type type,
                                           unsigned char *hash,
                                           size_t len);
 LIBSSH_API void ssh_print_hash(enum ssh_publickey_hash_type type, unsigned char *hash, size_t len);
-LIBSSH_API void ssh_print_hexa(const char *descr, const unsigned char *what, size_t len);
 LIBSSH_API int ssh_send_ignore (ssh_session session, const char *data);
 LIBSSH_API int ssh_send_debug (ssh_session session, const char *message, int always_display);
 LIBSSH_API void ssh_gssapi_set_creds(ssh_session session, const ssh_gssapi_creds creds);
