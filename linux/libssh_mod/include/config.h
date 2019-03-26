@@ -9,13 +9,13 @@
 #define LIBDIR "/usr/local/lib"
 #define PLUGINDIR "/usr/local/lib/libssh-4"
 #define SYSCONFDIR "/usr/local/etc"
-#define BINARYDIR "/shared/libssh-0.8.7/build"
-#define SOURCEDIR "/shared/libssh-0.8.7"
+#define BINARYDIR "/home/foca/shared/libssh-0.8.7/build"
+#define SOURCEDIR "/home/foca/shared/libssh-0.8.7"
 
 /************************** HEADER FILES *************************/
 
 /* Define to 1 if you have the <argp.h> header file. */
-/* #undef HAVE_ARGP_H */
+#define HAVE_ARGP_H 1
 
 /* Define to 1 if you have the <aprpa/inet.h> header file. */
 #define HAVE_ARPA_INET_H 1
@@ -90,7 +90,7 @@
 #define HAVE_DSA 1
 
 /* Define to 1 if you have gl_flags as a glob_t sturct member */
-/* #undef HAVE_GLOB_GL_FLAGS_MEMBER */
+#define HAVE_GLOB_GL_FLAGS_MEMBER 1
 
 /*************************** FUNCTIONS ***************************/
 
