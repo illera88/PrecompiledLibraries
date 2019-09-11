@@ -45,6 +45,14 @@
 # endif
 #endif /* !defined(HAVE_STRTOULL) */
 
+#ifndef SIZET_SPECIFIER
+#ifdef _MSC_VER
+#define SIZET_SPECIFIER "%Iu"
+#else
+#define SIZET_SPECIFIER "%zu"
+#endif
+#endif
+
 #if !defined(HAVE_STRNDUP)
 char *strndup(const char *s, size_t n);
 #endif /* ! HAVE_STRNDUP */
@@ -81,6 +89,18 @@ char *strndup(const char *s, size_t n);
 # ifndef PRIu32
 #  define PRIu32 "u"
 # endif /* PRIu32 */
+
+# ifndef PRIx64
+#  if __WORDSIZE == 64
+#   define PRIx64 "lx"
+#  else
+#   define PRIx64 "llx"
+#  endif /* __WORDSIZE */
+# endif /* PRIx64 */
+
+# ifndef PRIx32
+#  define PRIx32 "x"
+# endif /* PRIx32 */
 
 # ifdef _MSC_VER
 #  include <stdio.h>
@@ -217,6 +237,9 @@ void ssh_log_function(int verbosity,
                       const char *buffer);
 #define SSH_LOG(priority, ...) \
     _ssh_log(priority, __func__, __VA_ARGS__)
+#define SSH_LOG_COMMON(bos, priority, ...) \
+    ssh_log_common(&bos->common, priority, __func__, __VA_ARGS__)
+
 
 /* LEGACY */
 void ssh_log_common(struct ssh_common_struct *common,
@@ -260,8 +283,6 @@ int ssh_auth_reply_success(ssh_session session, int partial);
 int ssh_send_banner(ssh_session session, int is_server);
 
 /* connect.c */
-socket_t ssh_connect_host(ssh_session session, const char *host,const char
-        *bind_addr, int port, long timeout, long usec);
 socket_t ssh_connect_host_nonblocking(ssh_session session, const char *host,
 		const char *bind_addr, int port);
 

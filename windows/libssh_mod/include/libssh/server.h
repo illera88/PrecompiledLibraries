@@ -52,7 +52,10 @@ enum ssh_bind_options_e {
   SSH_BIND_OPTIONS_CIPHERS_S_C,
   SSH_BIND_OPTIONS_HMAC_C_S,
   SSH_BIND_OPTIONS_HMAC_S_C,
-  SSH_BIND_OPTIONS_HOSTKEY_MEMORY
+  SSH_BIND_OPTIONS_CONFIG_DIR,
+  SSH_BIND_OPTIONS_PUBKEY_ACCEPTED_KEY_TYPES,
+  SSH_BIND_OPTIONS_HOSTKEY_ALGORITHMS,
+  SSH_BIND_OPTIONS_PROCESS_CONFIG,
 };
 
 typedef struct ssh_bind_struct* ssh_bind;
@@ -90,6 +93,9 @@ LIBSSH_API ssh_bind ssh_bind_new(void);
 
 LIBSSH_API int ssh_bind_options_set(ssh_bind sshbind,
     enum ssh_bind_options_e type, const void *value);
+
+LIBSSH_API int ssh_bind_options_parse_config(ssh_bind sshbind,
+    const char *filename);
 
 /**
  * @brief Start listening to the socket.

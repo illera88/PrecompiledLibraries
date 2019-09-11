@@ -60,6 +60,7 @@ typedef mbedtls_md_context_t *EVPCTX;
 #define EVP_DIGEST_LEN EVP_MAX_MD_SIZE
 
 typedef mbedtls_mpi *bignum;
+typedef const mbedtls_mpi *const_bignum;
 typedef void* bignum_CTX;
 
 /* Constants for curves */
@@ -74,7 +75,7 @@ struct mbedtls_ecdsa_sig {
 
 bignum ssh_mbedcry_bn_new(void);
 void ssh_mbedcry_bn_free(bignum num);
-unsigned char *ssh_mbedcry_bn2num(bignum num, int radix);
+unsigned char *ssh_mbedcry_bn2num(const_bignum num, int radix);
 int ssh_mbedcry_rand(bignum rnd, int bits, int top, int bottom);
 int ssh_mbedcry_is_bit_set(bignum num, size_t pos);
 int ssh_mbedcry_rand_range(bignum dest, bignum max);
@@ -92,8 +93,12 @@ int ssh_mbedcry_hex2bn(bignum *dest, char *data);
 #define bignum_ctx_invalid(ctx) (ctx == NULL?0:1)
 #define bignum_set_word(bn, n) (mbedtls_mpi_lset(bn, n)==0?1:0) /* TODO fix
                                                           overflow/underflow */
-#define bignum_bin2bn(data, datalen, bn) mbedtls_mpi_read_binary(bn, data, \
-        datalen)
+#define bignum_bin2bn(data, datalen, bn) do { \
+    *(bn) = bignum_new(); \
+    if (*(bn) != NULL) { \
+        mbedtls_mpi_read_binary(*(bn), data, datalen); \
+    } \
+    } while(0)
 #define bignum_bn2dec(num) ssh_mbedcry_bn2num(num, 10)
 #define bignum_dec2bn(data, bn) mbedtls_mpi_read_string(bn, 10, data)
 #define bignum_bn2hex(num, dest) (*dest)=ssh_mbedcry_bn2num(num, 16)
@@ -113,6 +118,14 @@ int ssh_mbedcry_hex2bn(bignum *dest, char *data);
         mbedtls_mpi_size(num))
 #define bignum_cmp(num1, num2) mbedtls_mpi_cmp_mpi(num1, num2)
 #define bignum_rshift1(dest, src) mbedtls_mpi_copy(dest, src), mbedtls_mpi_shift_r(dest, 1)
+#define bignum_dup(orig, dest) do { \
+    if (*(dest) == NULL) { \
+        *(dest) = bignum_new(); \
+    } \
+    if (*(dest) != NULL) { \
+        mbedtls_mpi_copy(orig, *(dest)); \
+    } \
+    } while(0)
 
 mbedtls_ctr_drbg_context *ssh_get_mbedtls_ctr_drbg_context(void);
 
@@ -120,6 +133,8 @@ int ssh_mbedtls_random(void *where, int len, int strong);
 
 ssh_string make_ecpoint_string(const mbedtls_ecp_group *g, const
         mbedtls_ecp_point *p);
+
+#define ssh_fips_mode() false
 
 #endif /* HAVE_LIBMBEDCRYPTO */
 #endif /* LIBMBEDCRYPTO_H_ */

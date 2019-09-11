@@ -45,6 +45,7 @@
 #ifdef HAVE_OPENSSL_ECDH_H
 #include <openssl/ecdh.h>
 #endif
+#include "libssh/dh.h"
 #include "libssh/ecdh.h"
 #include "libssh/kex.h"
 #include "libssh/curve25519.h"
@@ -98,12 +99,13 @@ enum ssh_cipher_e {
     SSH_AEAD_CHACHA20_POLY1305
 };
 
+struct dh_ctx;
+
 struct ssh_crypto_struct {
-    bignum e,f,x,k,y;
-    bignum g, p;
-    int dh_group_is_mutable; /* do free group parameters */
+    bignum shared_secret;
+    struct dh_ctx *dh_ctx;
 #ifdef WITH_GEX
-    size_t dh_pmin; int dh_pn; int dh_pmax; /* preferred group parameters */
+	unsigned char using_old_gex; size_t dh_pmin; int dh_pn; int dh_pmax; /* preferred group parameters */
 #endif /* WITH_GEX */
 #ifdef HAVE_ECDH
 #ifdef HAVE_OPENSSL_ECC
@@ -122,7 +124,7 @@ struct ssh_crypto_struct {
     ssh_curve25519_pubkey curve25519_server_pubkey;
 #endif
     ssh_string dh_server_signature; /* information used by dh_handshake. */
-    size_t digest_len; /* len of all the fields below */
+    size_t digest_len; /* len of the two fields below */
     unsigned char *session_id;
     unsigned char *secret_hash; /* Secret hash is same as session id until re-kex */
     unsigned char *encryptIV;
@@ -148,7 +150,7 @@ struct ssh_crypto_struct {
     struct ssh_kex_struct client_kex;
     char *kex_methods[SSH_KEX_METHODS];
     enum ssh_key_exchange_e kex_type;
-    enum ssh_mac_e mac_type; /* Mac operations to use for key gen */
+    enum ssh_kdf_digest digest_type; /* Digest type for session keys derivation */
     enum ssh_crypto_direction_e used; /* Is this crypto still used for either of directions? */
 };
 
@@ -204,5 +206,9 @@ struct ssh_cipher_struct {
 };
 
 const struct ssh_cipher_struct *ssh_get_chacha20poly1305_cipher(void);
+int sshkdf_derive_key(struct ssh_crypto_struct *crypto,
+                      unsigned char *key, size_t key_len,
+                      int key_type, unsigned char *output,
+                      size_t requested_len);
 
 #endif /* _CRYPTO_H_ */
